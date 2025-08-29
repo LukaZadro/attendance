@@ -1,0 +1,97 @@
+
+.events-container,
+.confirm-event-container,
+.event-attendance-container {
+    margin: 2rem auto;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px #3c5b6f;
+}
+.confirm-event-container,
+.event-attendance-container {
+    display: none;
+}
+.event {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    border-left: 4px solid #3c5b6f;
+    box-shadow: 0 1px 3px #3c5b6f;
+    margin: 10px;
+}
+.event:hover {
+    transform: translateX(4px);
+}
+
+.delete-event-button,
+.see-event-attendance { border: none;
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    background-color: #3c5b6f;
+    color: white;
+    margin: 10px;
+    transition: background-color 0.3s ease;
+}
+.delete-event-button:hover,
+.see-event-attendance:hover {
+    background-color: #253b49;
+}
+.confirm-event-delete,
+.cancel-event-delete,
+.return-events-button {
+    border: none;
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    background-color: #3c5b6f;
+    transition: background-color 0.3s ease;
+    color: white;
+    margin: 10px;
+}
+
+.confirm-event-delete:hover,
+.cancel-event-delete:hover,
+.return-events-button:hover {
+    background-color: #253b49;
+    transform: translateY(-2px);
+}
+
+.cancel-event-delete {
+    background-color: #6f3c3c; /* Different shade for cancel */
+}
+
+.cancel-event-delete:hover {
+    background-color: #492525;
+}
+
+.return-events-button {
+    position: absolute;
+    top: 4rem;
+    right: 2rem;
+}
+
+.member {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    border-left: 4px solid #3c5b6f;
+    box-shadow: 0 1px 3px #3c5b6f;
+    margin: 10px;
+}
+
+.return-events-button {
+    margin: 10px;
+}

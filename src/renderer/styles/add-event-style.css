@@ -1,0 +1,87 @@
+.add-event-container {
+    margin: 2rem auto;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px #3c5b6f;
+}
+
+.add-event-container input[type="date"],
+.add-event-container select {
+    padding: 0.8rem 1rem;
+    border: 2px solid #dfe6e9;
+    border-radius: 8px;
+    font-size: 1rem;
+    flex-grow: 1;
+    transition: border-color 0.3s ease;
+}
+.add-event-container label {
+    font-size: 1.1rem;
+    min-width: 120px;
+    font-weight: 500;
+}
+.add-event-container form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+input[type="checkbox"] {
+    /* Remove default styles */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+
+    /* Custom size */
+    width: 1.5em;
+    height: 1.5em;
+
+    /* Visual styling */
+    border: 2px solid #555;
+    border-radius: 4px;
+    outline: none;
+    cursor: pointer;
+    vertical-align: middle;
+    position: relative;
+    transition: all 0.2s ease;
+}
+/* Checked state */
+input[type="checkbox"]:checked {
+    background-color: #3c5b6f;
+    border-color: #3c5b6f;
+}
+
+/* Checkmark (custom) */
+input[type="checkbox"]:checked::before {
+    content: "✓";
+    position: absolute;
+    color: white;
+    font-size: 1em;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+label {
+    font-size: 1.2em;
+    margin-left: 0.5em;
+    vertical-align: middle;
+}
+/* Submit button */
+.submit-button {
+    width: 40%;
+    background-color: #3c5b6f;
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 1.5rem;
+    transition: background-color 0.3s ease;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.submit-button:hover {
+    background-color: #253b49;
+}

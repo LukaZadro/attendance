@@ -1,0 +1,110 @@
+/* Main container styling - matches your event container */
+.members-container,
+.confirm-member-container,
+.member-stats-container {
+    margin: 2rem auto;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px #3c5b6f;
+}
+
+/* Members list container */
+.members-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+/* Individual member items */
+.member {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    border-left: 4px solid #3c5b6f;
+    box-shadow: 0 1px 3px #3c5b6f;
+    margin: 10px;
+}
+
+.member:hover {
+    transform: translateX(4px);
+}
+
+/* Member name text */
+.member-name {
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-left: 0.5rem;
+}
+
+.confirm-member-container ,
+.member-stats-container {
+    display: none;
+}
+.confirm-member-delete,
+.cancel-member-delete {
+    width: 40%;
+    background-color: #3c5b6f;
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 1.5rem;
+    transition: background-color 0.3s ease;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+}
+
+.confirm-member-delete:hover,
+.cancel-member-delete:hover {
+    background-color: #253b49;
+    transform: translateY(-2px);
+}
+
+/* Optional: Add some margin between the buttons */
+.confirm-member-delete {
+    margin-right: 1rem;
+}
+
+/* Optional: Different color for cancel button to distinguish it */
+.cancel-member-delete {
+    background-color: #6f3c3c; /* Different shade for cancel */
+}
+
+.cancel-member-delete:hover {
+    background-color: #492525;
+}
+
+.see-member-stats,
+.delete-member-button,
+.return-button {
+    border: none;
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    background-color: #3c5b6f;
+    transition: background-color 0.3s ease;
+    color: white;
+    margin: 10px;
+}
+
+.see-member-stats:hover,
+.delete-member-button:hover,
+.return-button:hover {
+    background-color: #253b49;
+}
+
+.return-button {
+    position: absolute;
+    top: 4rem;
+    right: 2rem;
+}
