@@ -1,0 +1,1 @@
+An app for tracking attendance of rehearsals and concerts. You can add members as well as individual events where you are able to mark who attended them. When you mark a person as present it will show in their individual stats. You can see every event a person attended as well as every person that attended a specific event.
