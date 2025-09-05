@@ -1,9 +1,13 @@
-(() => {
+(async () => {
     const eventsContainer = document.querySelector(".events-container");
     const confirmContainer = document.querySelector('.confirm-event-container');
     const eventAttendanceContainer = document.querySelector(".event-attendance-container");
+    const selectOrg = document.querySelector('#select-organization');
+    let organization = await window.electronAPI.getOrganization();
+    selectOrg.value = organization;
     let event_id = null;
     let event = null;
+    showEvents(organization);  
     document.addEventListener("click", async (e) => {
          if (e.target.classList.contains("delete-event-button")) {
             event_id = e.target.dataset.eventId;
@@ -45,7 +49,13 @@
                 
         }
     });
-    window.electronAPI.getAllEvents().then((events) => {
+    selectOrg.addEventListener('change', async (e) => {
+        organization = e.target.value;
+        clearEvents()
+        showEvents(organization)
+    })
+    function showEvents(organization) {
+        window.electronAPI.getAllEvents(organization).then((events) => {
         events.forEach((event) => {
             eventsContainer.insertAdjacentHTML(
                 "beforeend",
@@ -58,4 +68,11 @@
             );
         });
     });
+    }
+    function clearEvents() {
+        const events = document.querySelectorAll('.event')
+        events.forEach(() => {
+            document.querySelector('.event').remove()
+        })
+    }
 })();

@@ -1,4 +1,4 @@
-(() => {
+(async () => {
     const membersContainer = document.querySelector(".members-container");
     const confirmContainer = document.querySelector(
         ".confirm-member-container"
@@ -9,8 +9,12 @@
     const memberStatsContainer = document.querySelector(
         ".member-stats-container"
     );
+    const selectOrg = document.querySelector('#select-organization');
+    let organization = await window.electronAPI.getOrganization();
+    selectOrg.value = organization;
     let member_id = null;
     let member = null;
+    showMembers(organization);
     seeMembersContainer.addEventListener("click", async (e) => {
         if (e.target.classList.contains("delete-member-button")) {
             member = e.target.closest(".member");
@@ -38,10 +42,10 @@
             membersContainer.style.display = "none";
             memberStatsContainer.style.display = "block";
             const totalRehearsals = await window.electronAPI.getEventCount(
-                "rehearsal"
+                "rehearsal", organization
             );
             const totalConcerts = await window.electronAPI.getEventCount(
-                "concert"
+                "concert", organization
             );
             const memberRehearsals =
                 await window.electronAPI.getMemberEventCount(
@@ -53,6 +57,10 @@
                 "concert"
             );
             const memberName = await window.electronAPI.getMember(member_id);
+            console.log(totalConcerts)
+            console.log(totalRehearsals)
+            console.log(memberConcerts)
+            console.log(memberRehearsals)
             memberStatsContainer.insertAdjacentHTML(
                 "afterbegin",
                 `<div id='info-${member_id}'>
@@ -60,18 +68,25 @@
                     memberName.last_name
                 }</h2>
                     <h3>rehearsals: ${memberRehearsals}   rehearsal percentage: ${
-                    (totalRehearsals !== 0
-                        ? ((memberRehearsals / totalRehearsals)* 100).toFixed(2)
-                        : 0) 
+                    totalRehearsals !== 0
+                        ? ((memberRehearsals / totalRehearsals) * 100).toFixed(
+                              2
+                          )
+                        : 0
                 }% </h3>
                     <h3>concerts: ${memberConcerts}   concert percentage: ${
-                    (totalConcerts !== 0 ? ((memberConcerts / totalConcerts)*100).toFixed(2) : 0)
+                    totalConcerts !== 0
+                        ? ((memberConcerts / totalConcerts) * 100).toFixed(2)
+                        : 0
                 }% </h3>
                 <h3>Total: ${
-                    (totalRehearsals + totalConcerts !== 0
-                        ? (((memberRehearsals + memberConcerts) /
-                          (totalRehearsals + totalConcerts))* 100).toFixed(2)
-                        : 0) 
+                    totalRehearsals + totalConcerts !== 0
+                        ? (
+                              ((memberRehearsals + memberConcerts) /
+                                  (totalRehearsals + totalConcerts)) *
+                              100
+                          ).toFixed(2)
+                        : 0
                 }%</h3>
                 </div>`
             );
@@ -106,9 +121,16 @@
             membersContainer.style.display = "block";
             memberStatsContainer.style.display = "none";
             document.querySelector(`#info-${member_id}`).remove();
+            document.querySelectorAll('.event').forEach(e => e.remove())
         }
     });
-    window.electronAPI.getAllMembers().then((members) => {
+    selectOrg.addEventListener('change', async (e) => {
+        organization = e.target.value;
+        clearMembers()
+        showMembers(organization)
+    })
+    function showMembers(organization) {
+        window.electronAPI.getAllMembers(organization).then((members) => {
         members.forEach((member) => {
             membersContainer.insertAdjacentHTML(
                 "beforeend",
@@ -120,4 +142,11 @@
             );
         });
     });
+    }
+    function clearMembers() {
+        const members = document.querySelectorAll('.member')
+        members.forEach((el) => {
+            el.remove()
+        })
+    }
 })();

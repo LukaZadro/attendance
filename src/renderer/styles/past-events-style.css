@@ -1,4 +1,3 @@
-
 .events-container,
 .confirm-event-container,
 .event-attendance-container {
@@ -10,6 +9,19 @@
 .confirm-event-container,
 .event-attendance-container {
     display: none;
+}
+.events-container select {
+    padding: 0.8rem 1rem;
+    border: 2px solid #dfe6e9;
+    border-radius: 8px;
+    font-size: 1rem;
+    flex-grow: 1;
+    transition: border-color 0.3s ease;
+}
+.events-container label {
+    font-size: 1.1rem;
+    min-width: 120px;
+    font-weight: 500;
 }
 .event {
     display: flex;

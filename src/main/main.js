@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
 const Database = require("better-sqlite3");
 const fs = require("fs");
+let currentOrganization = null;
 
 // Initialize the database
 const dbPath = path.join(__dirname, "..", "data", "attendance.db");
@@ -10,11 +11,13 @@ db.exec(`
     CREATE TABLE IF NOT EXISTS events (
         event_id INTEGER PRIMARY KEY,
         event_type TEXT NOT NULL,
-        event_date DATE NOT NULL);
+        event_date DATE NOT NULL,
+        organization TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS members (
         member_id INTEGER PRIMARY KEY,
         first_name TEXT NOT NULL,
-        last_name TEXT NOT NULL);
+        last_name TEXT NOT NULL,
+        organization TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS attendance (
         attendance_id INTEGER PRIMARY KEY,
         event_id INTEGER NOT NULL,
@@ -38,7 +41,7 @@ function createWindow() {
     win.loadFile(path.join(__dirname, "../renderer/index.html"));
 }
 
-ipcMain.handle("load-view", async (event, viewFile) => {
+ipcMain.handle("load-view", async (_, viewFile) => {
     const fullPath = path.join(__dirname, "..", "renderer", "views", viewFile);
     try {
         return await fs.promises.readFile(fullPath, "utf8");
@@ -47,14 +50,14 @@ ipcMain.handle("load-view", async (event, viewFile) => {
     }
 });
 
-ipcMain.handle("get-all-members", () => {
-    const stmnt = db.prepare("SELECT * FROM members");
-    return stmnt.all();
+ipcMain.handle("get-all-members", (_, organization) => {
+    const stmnt = db.prepare("SELECT * FROM members WHERE organization = ?");
+    return stmnt.all(organization);
 });
 
-ipcMain.handle("get-all-events", () => {
-    const stmnt = db.prepare("SELECT * FROM events");
-    return stmnt.all();
+ipcMain.handle("get-all-events", (_, organization) => {
+    const stmnt = db.prepare("SELECT * FROM events WHERE organization = ?");
+    return stmnt.all(organization);
 });
 
 ipcMain.handle("get-member", (_, member_id) => {
@@ -64,18 +67,18 @@ ipcMain.handle("get-member", (_, member_id) => {
     return getMember.get(member_id);
 });
 
-ipcMain.handle("add-member", (_, first_name, last_name) => {
+ipcMain.handle("add-member", (_, first_name, last_name, organization) => {
     const insertMember = db.prepare(
-        "INSERT INTO members (first_name, last_name) VALUES (?, ?)"
+        "INSERT INTO members (first_name, last_name, organization) VALUES (?, ?, ?)"
     );
     const checkStmnt = db.prepare(
-        "SELECT * FROM members WHERE first_name = ? and last_name = ?"
+        "SELECT * FROM members WHERE first_name = ? and last_name = ? and organization = ?"
     );
-    const exists = checkStmnt.get(first_name, last_name);
+    const exists = checkStmnt.get(first_name, last_name, organization);
     if (exists) {
         return { success: false, message: "Member already exists" };
     }
-    insertMember.run(first_name, last_name);
+    insertMember.run(first_name, last_name, organization);
     return { success: true, message: "New member added!" };
 });
 
@@ -88,18 +91,11 @@ ipcMain.handle("delete-member", (_, member_id) => {
     deleteMemberRecords.run(member_id);
 });
 
-ipcMain.handle("add-event", (_, event_date, event_type) => {
+ipcMain.handle("add-event", (_, event_date, event_type, organization) => {
     const insertEvent = db.prepare(
-        "INSERT INTO events (event_date, event_type) VALUES(?,?)"
+        "INSERT INTO events (event_date, event_type, organization) VALUES(?,?,?)"
     );
-    // const checkStmnt = db.prepare(
-    //     "SELECT * FROM events WHERE event_date = ? and event_type = ?"
-    // );
-    // const exists = checkStmnt.get(event_date, event_type);
-    // if (exists) {
-    //     return { success: false, message: "Event already exists" };
-    // }
-    const result = insertEvent.run(event_date, event_type);
+    const result = insertEvent.run(event_date, event_type, organization);
     return {
         success: true,
         message: "New event added!",
@@ -113,7 +109,7 @@ ipcMain.handle("remove-event", (_, event_id) => {
 
 ipcMain.handle("record-attendance", (_, event_id, present_members) => {
     const recordAttendance = db.prepare(
-        "INSERT INTO attendance (event_id, member_id) VALUES (?, ?)"
+        "INSERT OR IGNORE INTO attendance (event_id, member_id) VALUES (?, ?)"
     );
     present_members.forEach((member) => {
         recordAttendance.run(event_id, member.member_id);
@@ -133,14 +129,16 @@ ipcMain.handle("get-member-event-count", (_, member_id, event_type) => {
     );
     return getMemberAttendance.get(member_id, event_type).count;
 });
-ipcMain.handle("get-event-count", (_, event_type) => {
+
+ipcMain.handle("get-event-count", (_, event_type, organization) => {
     const getEventCount = db.prepare(
         `SELECT COUNT(*) AS count 
         FROM events
-        WHERE event_type = ?`
+        WHERE event_type = ? AND organization = ?`
     );
-    return getEventCount.get(event_type).count;
+    return getEventCount.get(event_type, organization).count;
 });
+
 ipcMain.handle("get-attended-events", (_, event_type, member_id) => {
     const getAttendedEvents = db.prepare(`SELECT * FROM 
             members 
@@ -149,6 +147,7 @@ ipcMain.handle("get-attended-events", (_, event_type, member_id) => {
             WHERE events.event_type = ? AND members.member_id = ?`);
     return getAttendedEvents.all(event_type, member_id);
 });
+
 ipcMain.handle("get-event-attendance", (_, event_id) => {
     const getEventAttendance = db.prepare(`SELECT * FROM 
             members 
@@ -157,10 +156,20 @@ ipcMain.handle("get-event-attendance", (_, event_id) => {
             WHERE events.event_id = ?`)
     return getEventAttendance.all(event_id)
 })
+
 ipcMain.handle('get-event', (_, event_id) => {
     const getEvent = db.prepare(`SELECT * FROM events WHERE events.event_id = ?`)
     return getEvent.get(event_id)
 })
+
+ipcMain.handle('set-organization', (_, organization) => {
+    currentOrganization = organization;
+})
+
+ipcMain.handle('get-organization', () => {
+    return currentOrganization;
+})
+
 app.on("window-all-closed", () => {
     app.quit();
 });
