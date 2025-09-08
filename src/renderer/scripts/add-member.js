@@ -16,6 +16,7 @@
             console.log("Member exists!");
         } else {
             console.log("Member added!");
+            showMessage()
             form.reset()
         } 
     }
@@ -23,10 +24,11 @@
         organization = e.target.value;
     });
     function showMessage() {
-
-    }
-    function removeMessage() {
-        
+        const message = document.querySelector(".message")
+        message.style.display = "block"
+        setTimeout(() => {
+            message.style.display = "none"
+        }, 3000);
     }
 })();
 

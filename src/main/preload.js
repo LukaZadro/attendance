@@ -17,5 +17,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     getEventAttendance: (event_id) => ipcRenderer.invoke('get-event-attendance', event_id),
     getEvent: (event_id) => ipcRenderer.invoke('get-event', event_id),
     setOrganization: (organization) => ipcRenderer.invoke('set-organization', organization),
-    getOrganization: () => ipcRenderer.invoke('get-organization')
+    getOrganization: () => ipcRenderer.invoke('get-organization'),
+    showSaveDialog: (defaultFileName) => ipcRenderer.invoke('show-save-dialog', defaultFileName),
+    generatePDF: (filePath, content) => ipcRenderer.invoke('generate-pdf', filePath, content)
 })

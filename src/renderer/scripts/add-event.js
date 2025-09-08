@@ -38,6 +38,7 @@
             result.event_id,
             presentMembers
         );
+        showMessage();
         form.reset();
     }
     selectOrg.addEventListener("change", async (e) => {
@@ -64,5 +65,12 @@
         members.forEach((el) => {
            el.remove();
         });
+    }
+    function showMessage() {
+        const message = document.querySelector(".message");
+        message.style.display = "block";   
+        setTimeout(() => {
+            message.style.display = "none";
+        }, 3000);
     }
 })();

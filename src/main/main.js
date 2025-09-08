@@ -1,7 +1,8 @@
-const { app, BrowserWindow, ipcMain } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog } = require("electron");
 const path = require("path");
 const Database = require("better-sqlite3");
 const fs = require("fs");
+const PDFDocument = require("pdfkit-table");
 let currentOrganization = null;
 
 // Initialize the database
@@ -153,22 +154,72 @@ ipcMain.handle("get-event-attendance", (_, event_id) => {
             members 
             JOIN attendance ON attendance.member_id = members.member_id
             JOIN events ON attendance.event_id = events.event_id
-            WHERE events.event_id = ?`)
-    return getEventAttendance.all(event_id)
-})
+            WHERE events.event_id = ?`);
+    return getEventAttendance.all(event_id);
+});
 
-ipcMain.handle('get-event', (_, event_id) => {
-    const getEvent = db.prepare(`SELECT * FROM events WHERE events.event_id = ?`)
-    return getEvent.get(event_id)
-})
+ipcMain.handle("get-event", (_, event_id) => {
+    const getEvent = db.prepare(
+        `SELECT * FROM events WHERE events.event_id = ?`
+    );
+    return getEvent.get(event_id);
+});
 
-ipcMain.handle('set-organization', (_, organization) => {
+ipcMain.handle("set-organization", (_, organization) => {
     currentOrganization = organization;
-})
+});
 
-ipcMain.handle('get-organization', () => {
+ipcMain.handle("get-organization", () => {
     return currentOrganization;
-})
+});
+
+ipcMain.handle("show-save-dialog", async (_, defaultFileName) => {
+    const result = await dialog.showSaveDialog({
+        title: "Save PDF",
+        defaultPath: defaultFileName,
+        filters: [{ name: "PDF Files", extensions: ["pdf"] }],
+    });
+    return result.filePath;
+});
+
+ipcMain.handle("generate-pdf", async (_, filePath, content) => {
+    return new Promise((resolve, reject) => {
+        const doc = new PDFDocument();
+        const stream = fs.createWriteStream(filePath); // write to PDF
+        doc.pipe(stream);
+
+        const table = {
+            headers: [
+                "First Name",
+                "Last Name",
+                "Rehearsals",
+                "Concerts",
+                "Reh. %",
+                "Conc. %",
+                "Total %",
+            ],
+            rows: content.map((member) => [
+                member.first_name,
+                member.last_name,
+                member.rehearsals,
+                member.concerts,
+                member.rehearsalPercentage.toFixed(2),
+                member.concertPercentage.toFixed(2),
+                member.totalPercentage.toFixed(2),
+            ]),
+        };
+
+        doc.table(table);
+        doc.end();
+
+        stream.on("finish", () =>
+            resolve({ success: true, message: "PDF generated!" })
+        );
+        stream.on("error", (err) =>
+            reject({ success: false, message: err.message })
+        );
+    });
+});
 
 app.on("window-all-closed", () => {
     app.quit();

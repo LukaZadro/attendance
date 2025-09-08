@@ -95,7 +95,8 @@
 
 .see-member-stats,
 .delete-member-button,
-.return-button {
+.return-button,
+.download-button {
     border: none;
     padding: 0.8rem 1.5rem;
     font-size: 1rem;
@@ -109,10 +110,15 @@
     color: white;
     margin: 10px;
 }
+.download-button {
+    text-align: center;
+    width: 20%;
+}
 
 .see-member-stats:hover,
 .delete-member-button:hover,
-.return-button:hover {
+.return-button:hover,
+.download-button:hover {
     background-color: #253b49;
 }
 

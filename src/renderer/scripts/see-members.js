@@ -9,7 +9,7 @@
     const memberStatsContainer = document.querySelector(
         ".member-stats-container"
     );
-    const selectOrg = document.querySelector('#select-organization');
+    const selectOrg = document.querySelector("#select-organization");
     let organization = await window.electronAPI.getOrganization();
     selectOrg.value = organization;
     let member_id = null;
@@ -42,10 +42,12 @@
             membersContainer.style.display = "none";
             memberStatsContainer.style.display = "block";
             const totalRehearsals = await window.electronAPI.getEventCount(
-                "rehearsal", organization
+                "rehearsal",
+                organization
             );
             const totalConcerts = await window.electronAPI.getEventCount(
-                "concert", organization
+                "concert",
+                organization
             );
             const memberRehearsals =
                 await window.electronAPI.getMemberEventCount(
@@ -57,10 +59,6 @@
                 "concert"
             );
             const memberName = await window.electronAPI.getMember(member_id);
-            console.log(totalConcerts)
-            console.log(totalRehearsals)
-            console.log(memberConcerts)
-            console.log(memberRehearsals)
             memberStatsContainer.insertAdjacentHTML(
                 "afterbegin",
                 `<div id='info-${member_id}'>
@@ -117,36 +115,100 @@
                     });
                 });
         }
+        if (e.target.classList.contains("download-button")) {
+            const members = await window.electronAPI.getAllMembers(
+                organization
+            );
+            const stats = await Promise.all(
+                members.map(async (member) => {
+                    const rehearsals =
+                        await window.electronAPI.getMemberEventCount(
+                            member.member_id,
+                            "rehearsal"
+                        );
+                    const concerts =
+                        await window.electronAPI.getMemberEventCount(
+                            member.member_id,
+                            "concert"
+                        );
+                    const totalRehearsals =
+                        await window.electronAPI.getEventCount(
+                            "rehearsal",
+                            organization
+                        );
+                    const totalConcerts =
+                        await window.electronAPI.getEventCount(
+                            "concert",
+                            organization
+                        );
+                    const rehearsalPercentage = totalRehearsals
+                        ? (rehearsals / totalRehearsals) * 100
+                        : 0;
+                    const concertPercentage = totalConcerts
+                        ? (concerts / totalConcerts) * 100
+                        : 0;
+                    const totalPercentage =
+                        totalRehearsals + totalConcerts
+                            ? ((rehearsals + concerts) /
+                                  (totalRehearsals + totalConcerts)) *
+                              100
+                            : 0;
+                    return {
+                        ...member,
+                        rehearsals,
+                        concerts,
+                        rehearsalPercentage,
+                        concertPercentage,
+                        totalPercentage
+                    };
+                })
+            );
+            console.log(stats);
+            const filePath = await window.electronAPI.showSaveDialog(
+                "member_stats_" + new Date().toLocaleDateString('de-DE') + ".pdf"
+            );
+            if (!filePath) return;
+            console.log(filePath);
+            const result = await window.electronAPI.generatePDF(
+                filePath,
+                stats
+            );
+            if (result.success) {
+                alert(result.message);
+            } else {
+                alert(result.message);
+            }
+        }
         if (e.target.classList.contains("return-button")) {
             membersContainer.style.display = "block";
             memberStatsContainer.style.display = "none";
             document.querySelector(`#info-${member_id}`).remove();
-            document.querySelectorAll('.event').forEach(e => e.remove())
+            document.querySelectorAll(".event").forEach((e) => e.remove());
         }
     });
-    selectOrg.addEventListener('change', async (e) => {
+    selectOrg.addEventListener("change", async (e) => {
         organization = e.target.value;
-        clearMembers()
-        showMembers(organization)
-    })
+        clearMembers();
+        showMembers(organization);
+    });
     function showMembers(organization) {
         window.electronAPI.getAllMembers(organization).then((members) => {
-        members.forEach((member) => {
-            membersContainer.insertAdjacentHTML(
-                "beforeend",
-                `<div class="member">
+            members.forEach((member) => {
+                membersContainer.insertAdjacentHTML(
+                    "beforeend",
+                    `<div class="member">
                 <h3>${member.first_name} ${member.last_name}</h3>
                 <button class='see-member-stats' id="${member.member_id}"> See stats </button>
                 <button class="delete-member-button" id="${member.member_id}"> Delete </button>
             </div>`
-            );
+                );
+            });
         });
-    });
     }
     function clearMembers() {
-        const members = document.querySelectorAll('.member')
+        const members = document.querySelectorAll(".member");
         members.forEach((el) => {
-            el.remove()
-        })
+            el.remove();
+        });
     }
 })();
