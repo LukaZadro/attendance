@@ -3,6 +3,7 @@
     const confirmContainer = document.querySelector(
         ".confirm-member-container"
     );
+
     const seeMembersContainer = document.querySelector(
         ".see-members-container"
     );
@@ -11,10 +12,17 @@
     );
     const selectOrg = document.querySelector("#select-organization");
     let organization = await window.electronAPI.getOrganization();
-    selectOrg.value = organization;
     let member_id = null;
     let member = null;
     showMembers(organization);
+    const organizations = await window.electronAPI.getAllOrganizations();
+    organizations.forEach(organization => {
+        const option = document.createElement('option');
+        option.value = organization.organization_name;
+        option.textContent = organization.organization_name;
+        selectOrg.appendChild(option);
+    });
+    selectOrg.value = organization;
     seeMembersContainer.addEventListener("click", async (e) => {
         if (e.target.classList.contains("delete-member-button")) {
             member = e.target.closest(".member");

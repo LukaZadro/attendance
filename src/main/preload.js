@@ -19,5 +19,19 @@ contextBridge.exposeInMainWorld('electronAPI', {
     setOrganization: (organization) => ipcRenderer.invoke('set-organization', organization),
     getOrganization: () => ipcRenderer.invoke('get-organization'),
     showSaveDialog: (defaultFileName) => ipcRenderer.invoke('show-save-dialog', defaultFileName),
-    generatePDF: (filePath, content) => ipcRenderer.invoke('generate-pdf', filePath, content)
+    generatePDF: (filePath, content) => ipcRenderer.invoke('generate-pdf', filePath, content),
+    addOrganization: (orgName) => ipcRenderer.invoke('add-organization', orgName),
+    deleteOrganization: (orgName) => ipcRenderer.invoke('delete-organization', orgName),
+    getAllOrganizations: () => ipcRenderer.invoke('get-all-organizations'),
+    store: {
+    get(key) {
+      return ipcRenderer.sendSync('electron-store-get', key);
+    },
+    set(property, val) {
+      ipcRenderer.send('electron-store-set', property, val);
+    },
+    delete(key) {
+      ipcRenderer.send('electron-store-delete', key);
+    }
+  }
 })

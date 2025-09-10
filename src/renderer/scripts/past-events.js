@@ -4,10 +4,19 @@
     const eventAttendanceContainer = document.querySelector(".event-attendance-container");
     const selectOrg = document.querySelector('#select-organization');
     let organization = await window.electronAPI.getOrganization();
-    selectOrg.value = organization;
     let event_id = null;
     let event = null;
-    showEvents(organization);  
+    showEvents(organization);
+    const organizations = await window.electronAPI.getAllOrganizations();
+    organizations.forEach(organization => {
+        const option = document.createElement('option');
+        option.value = organization.organization_name;
+        option.textContent = organization.organization_name;
+        selectOrg.appendChild(option);
+    });  
+
+    selectOrg.value = organization;
+    
     document.addEventListener("click", async (e) => {
          if (e.target.classList.contains("delete-event-button")) {
             event_id = e.target.dataset.eventId;

@@ -23,7 +23,12 @@ const routes = {
         html: '../views/see-members.html',
         css: "./styles/see-members-style.css",
         js: './scripts/see-members.js'
-    }  
+    },
+    "#select-organization": {
+        html: '../views/select-organization.html',
+        css: "./styles/select-organization-style.css",
+        js: './scripts/select-organization.js'
+    } 
 }
 
 async function loadView(route) {

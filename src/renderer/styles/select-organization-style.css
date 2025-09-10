@@ -1,0 +1,59 @@
+.select-organization-container {
+    margin: 2rem auto;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px #3c5b6f;
+}
+.select-organization-container select {
+    padding: 0.8rem 1rem;
+    border: 2px solid #dfe6e9;
+    border-radius: 8px;
+    font-size: 1rem;
+    flex-grow: 1;
+    transition: border-color 0.3s ease;
+}
+.select-organization-container label {
+    font-size: 1.1rem;
+    min-width: 120px;
+    font-weight: 500;
+}
+
+.add-organization-button {
+    width: 40%;
+    background-color: #3c5b6f;
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 1.5rem;
+    transition: background-color 0.3s ease;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.add-organization-button:hover {
+    background-color: #253b49;
+}
+
+.select-organization-container input[type="text"] {
+    padding: 0.8rem 1rem;
+    border: 2px solid #dfe6e9;
+    border-radius: 8px;
+    font-size: 1rem;
+    flex-grow: 1;
+    transition: border-color 0.3s ease;
+}
+
+.message {
+    display: none;
+    margin-top: 1.5rem;
+    padding: 1rem;
+    border-radius: 8px;
+    background-color: #dff0d8;
+    color: #3c763d;
+    text-align: center;
+    font-weight: 500;
+}

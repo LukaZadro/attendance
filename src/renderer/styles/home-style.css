@@ -4,16 +4,3 @@
     border-radius: 12px;
     box-shadow: 0 4px 12px #3c5b6f;
 }
-.home-container select {
-    padding: 0.8rem 1rem;
-    border: 2px solid #dfe6e9;
-    border-radius: 8px;
-    font-size: 1rem;
-    flex-grow: 1;
-    transition: border-color 0.3s ease;
-}
-.home-container label {
-    font-size: 1.1rem;
-    min-width: 120px;
-    font-weight: 500;
-}

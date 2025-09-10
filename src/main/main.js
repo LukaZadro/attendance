@@ -1,9 +1,11 @@
 const { app, BrowserWindow, ipcMain, dialog } = require("electron");
+const { Store } = require("electron-store");
 const path = require("path");
 const Database = require("better-sqlite3");
 const fs = require("fs");
 const PDFDocument = require("pdfkit-table");
 let currentOrganization = null;
+const store = new Store();
 
 // Initialize the database
 const dbPath = path.join(__dirname, "..", "data", "attendance.db");
@@ -13,12 +15,15 @@ db.exec(`
         event_id INTEGER PRIMARY KEY,
         event_type TEXT NOT NULL,
         event_date DATE NOT NULL,
-        organization TEXT NOT NULL);
+        organization TEXT NOT NULL,
+        FOREIGN KEY (organization) REFERENCES organization(organization_name) ON DELETE CASCADE);
     CREATE TABLE IF NOT EXISTS members (
         member_id INTEGER PRIMARY KEY,
         first_name TEXT NOT NULL,
         last_name TEXT NOT NULL,
-        organization TEXT NOT NULL);
+        organization TEXT NOT NULL,
+        UNIQUE (first_name, last_name, organization)
+        FOREIGN KEY (organization) REFERENCES organization(organization_name) ON DELETE CASCADE);
     CREATE TABLE IF NOT EXISTS attendance (
         attendance_id INTEGER PRIMARY KEY,
         event_id INTEGER NOT NULL,
@@ -26,6 +31,13 @@ db.exec(`
         FOREIGN KEY (member_id) REFERENCES members(member_id) ON DELETE CASCADE,
         FOREIGN KEY (event_id) REFERENCES events(event_id) ON DELETE CASCADE,
         UNIQUE (event_id, member_id));
+    CREATE TABLE IF NOT EXISTS organization (
+        organization_id INTEGER PRIMARY KEY,
+        organization_name TEXT NOT NULL UNIQUE);
+    CREATE TABLE IF NOT EXISTS settings (
+        setting_id INTEGER PRIMARY KEY,
+        setting_key TEXT NOT NULL UNIQUE,
+        setting_value TEXT);
     CREATE INDEX IF NOT EXISTS idx_events_date ON events(event_date);
     CREATE INDEX IF NOT EXISTS idx_attendance_event ON attendance(event_id);
     CREATE INDEX IF NOT EXISTS idx_attendance_member ON attendance(member_id);
@@ -221,6 +233,41 @@ ipcMain.handle("generate-pdf", async (_, filePath, content) => {
     });
 });
 
+ipcMain.handle("add-organization", (_, orgName) => {
+    const insertOrg = db.prepare(
+        "INSERT INTO organization (organization_name) VALUES (?)"
+    );
+    const checkStmnt = db.prepare(
+        "SELECT * FROM organization WHERE organization_name = ?"
+    );
+    const exists = checkStmnt.get(orgName);
+    if (exists) {
+        return { success: false, message: "Organization already exists" };
+    }
+    insertOrg.run(orgName);
+    return { success: true, message: "New organization added!" };
+});
+
+ipcMain.handle("delete-organization", (_, orgName) => {
+    const deleteOrg = db.prepare(
+        "DELETE FROM organization WHERE organization_name = ?"
+    );
+    deleteOrg.run(orgName);
+});
+ipcMain.handle("get-all-organizations", () => {
+    const getAllOrgs = db.prepare("SELECT * FROM organization");
+    return getAllOrgs.all();
+});
+
+ipcMain.on('electron-store-get', async (event, val) => {
+  event.returnValue = store.get(val);
+});
+ipcMain.on('electron-store-set', async (_, key, val) => {
+  store.set(key, val);
+});
+ipcMain.on('electron-store-delete', async (_, key) => {
+  store.delete(key);
+});
 app.on("window-all-closed", () => {
     app.quit();
 });

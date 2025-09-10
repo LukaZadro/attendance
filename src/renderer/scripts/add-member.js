@@ -2,9 +2,18 @@
     const form = document.querySelector(".add-member-form")
     form.addEventListener('submit', sendNewMember)
     const selectOrg = document.querySelector('#select-organization');
-    let organization = await window.electronAPI.getOrganization();
+    const organization = await window.electronAPI.getOrganization();
+    
+
+    const organizations = await window.electronAPI.getAllOrganizations();
+    organizations.forEach(organization => {
+        const option = document.createElement('option');
+        option.value = organization.organization_name;
+        option.textContent = organization.organization_name;
+        selectOrg.appendChild(option);
+    });
+
     selectOrg.value = organization;
-    //Send new member info to main
     async function sendNewMember(e) {
         e.preventDefault()
         const fname = form.fname.value.toUpperCase().trim()

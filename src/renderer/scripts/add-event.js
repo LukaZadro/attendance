@@ -3,9 +3,16 @@
     const form = document.querySelector("form");
     const selectOrg = document.querySelector("#select-organization");
     let organization = await window.electronAPI.getOrganization();
-    selectOrg.value = organization;
+    
     showMembers(organization);
-
+    const organizations = await window.electronAPI.getAllOrganizations();
+    organizations.forEach(organization => {
+        const option = document.createElement('option');
+        option.value = organization.organization_name;
+        option.textContent = organization.organization_name;
+        selectOrg.appendChild(option);
+    });
+    selectOrg.value = organization;
     form.addEventListener("submit", submitAttendance);
     async function submitAttendance(e) {
         e.preventDefault();
