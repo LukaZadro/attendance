@@ -1,11 +1,8 @@
 const { app, BrowserWindow, ipcMain, dialog } = require("electron");
-const { Store } = require("electron-store");
 const path = require("path");
 const Database = require("better-sqlite3");
 const fs = require("fs");
 const PDFDocument = require("pdfkit-table");
-let currentOrganization = null;
-const store = new Store();
 
 // Initialize the database
 const dbPath = path.join(__dirname, "..", "data", "attendance.db");
@@ -32,12 +29,20 @@ db.exec(`
         FOREIGN KEY (event_id) REFERENCES events(event_id) ON DELETE CASCADE,
         UNIQUE (event_id, member_id));
     CREATE TABLE IF NOT EXISTS organization (
-        organization_id INTEGER PRIMARY KEY,
-        organization_name TEXT NOT NULL UNIQUE);
+        organization_name TEXT PRIMARY KEY);
     CREATE TABLE IF NOT EXISTS settings (
-        setting_id INTEGER PRIMARY KEY,
-        setting_key TEXT NOT NULL UNIQUE,
+        setting_key TEXT PRIMARY KEY,
         setting_value TEXT);
+    CREATE TABLE IF NOT EXISTS organization_event_types (
+        organization_name TEXT NOT NULL,
+        event_type TEXT NOT NULL,
+        PRIMARY KEY (organization_name, event_type),
+        FOREIGN KEY (organization_name) REFERENCES organization(organization_name) ON DELETE CASCADE);
+    CREATE TABLE IF NOT EXISTS organization_settings (
+        organization_name TEXT PRIMARY KEY,
+        setting_key TEXT NOT NULL,
+        setting_value TEXT,
+        FOREIGN KEY (organization_name) REFERENCES organization(organization_name) ON DELETE CASCADE);
     CREATE INDEX IF NOT EXISTS idx_events_date ON events(event_date);
     CREATE INDEX IF NOT EXISTS idx_attendance_event ON attendance(event_id);
     CREATE INDEX IF NOT EXISTS idx_attendance_member ON attendance(member_id);
@@ -135,6 +140,7 @@ ipcMain.handle("get-all-attendance", () => {
 });
 
 ipcMain.handle("get-member-event-count", (_, member_id, event_type) => {
+
     const getMemberAttendance = db.prepare(
         `SELECT COUNT(*) AS count 
         FROM attendance JOIN events ON attendance.event_id = events.event_id
@@ -152,6 +158,14 @@ ipcMain.handle("get-event-count", (_, event_type, organization) => {
     return getEventCount.get(event_type, organization).count;
 });
 
+ipcMain.handle('get-total-event-count', (_, organization) => {
+    const getTotalEventCount = db.prepare(
+        `SELECT COUNT(*) AS count
+        FROM events
+        WHERE organization = ?`
+    );
+    return getTotalEventCount.get(organization).count;
+});
 ipcMain.handle("get-attended-events", (_, event_type, member_id) => {
     const getAttendedEvents = db.prepare(`SELECT * FROM 
             members 
@@ -175,14 +189,6 @@ ipcMain.handle("get-event", (_, event_id) => {
         `SELECT * FROM events WHERE events.event_id = ?`
     );
     return getEvent.get(event_id);
-});
-
-ipcMain.handle("set-organization", (_, organization) => {
-    currentOrganization = organization;
-});
-
-ipcMain.handle("get-organization", () => {
-    return currentOrganization;
 });
 
 ipcMain.handle("show-save-dialog", async (_, defaultFileName) => {
@@ -254,19 +260,48 @@ ipcMain.handle("delete-organization", (_, orgName) => {
     );
     deleteOrg.run(orgName);
 });
+
 ipcMain.handle("get-all-organizations", () => {
     const getAllOrgs = db.prepare("SELECT * FROM organization");
     return getAllOrgs.all();
 });
 
-ipcMain.on('electron-store-get', async (event, val) => {
-  event.returnValue = store.get(val);
+ipcMain.handle('get-setting', (_, key) => {
+    const getSetting = db.prepare("SELECT setting_value FROM settings WHERE setting_key = ?");
+    const row = getSetting.get(key);
+    return row ? row.setting_value : null;
 });
-ipcMain.on('electron-store-set', async (_, key, val) => {
-  store.set(key, val);
+
+ipcMain.handle('set-setting', (_, key, value) => {
+    const insertSetting = db.prepare(`
+        REPLACE INTO settings (setting_key, setting_value) 
+        VALUES (?, ?)
+    `);
+    insertSetting.run(key, value);
 });
-ipcMain.on('electron-store-delete', async (_, key) => {
-  store.delete(key);
+
+ipcMain.handle('add-event-type', (_, organization_name, event_type) => {
+    const insertEventType = db.prepare(`
+        INSERT OR IGNORE INTO organization_event_types (organization_name, event_type)
+        VALUES (?, ?)
+    `);
+    insertEventType.run(organization_name, event_type);
+});
+
+ipcMain.handle('get-event-types', (_, organization_name) => {
+    const getEventTypes = db.prepare(`
+        SELECT event_type FROM organization_event_types
+        WHERE organization_name = ?
+    `);
+    return getEventTypes.all(organization_name).map(row => row.event_type);
+});
+
+ipcMain.handle('remove-event-type', (_, organization_name, event_type) => {
+    const removeEventType = db.prepare(`
+        DELETE FROM organization_event_types
+        WHERE organization_name = ? AND event_type = ?
+    `);
+    removeEventType.run(organization_name, event_type);
 });
 app.on("window-all-closed", () => {
     app.quit();

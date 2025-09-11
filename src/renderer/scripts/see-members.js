@@ -11,13 +11,19 @@
         ".member-stats-container"
     );
     const selectOrg = document.querySelector("#select-organization");
-    let organization = await window.electronAPI.getOrganization();
+    let organization = await window.electronAPI.getSetting(
+        "currentOrganization"
+    );
     let member_id = null;
     let member = null;
+    let memberInfo = null;
+    let totalAttendance = null;
+    let eventAttendance = null;
+    let totalEvents = null;
     showMembers(organization);
     const organizations = await window.electronAPI.getAllOrganizations();
-    organizations.forEach(organization => {
-        const option = document.createElement('option');
+    organizations.forEach((organization) => {
+        const option = document.createElement("option");
         option.value = organization.organization_name;
         option.textContent = organization.organization_name;
         selectOrg.appendChild(option);
@@ -49,79 +55,47 @@
             member_id = e.target.id;
             membersContainer.style.display = "none";
             memberStatsContainer.style.display = "block";
-            const totalRehearsals = await window.electronAPI.getEventCount(
-                "rehearsal",
-                organization
-            );
-            const totalConcerts = await window.electronAPI.getEventCount(
-                "concert",
-                organization
-            );
-            const memberRehearsals =
-                await window.electronAPI.getMemberEventCount(
-                    member_id,
-                    "rehearsal"
-                ); //ovisno o opcijama koje postoje
-            const memberConcerts = await window.electronAPI.getMemberEventCount(
-                member_id,
-                "concert"
-            );
+            
             const memberName = await window.electronAPI.getMember(member_id);
+            const eventTypes = await window.electronAPI.getAllEventTypes(
+                organization
+            );
             memberStatsContainer.insertAdjacentHTML(
                 "afterbegin",
                 `<div id='info-${member_id}'>
-                    <h2>Stats for ${memberName.first_name} ${
-                    memberName.last_name
-                }</h2>
-                    <h3>rehearsals: ${memberRehearsals}   rehearsal percentage: ${
-                    totalRehearsals !== 0
-                        ? ((memberRehearsals / totalRehearsals) * 100).toFixed(
-                              2
-                          )
-                        : 0
-                }% </h3>
-                    <h3>concerts: ${memberConcerts}   concert percentage: ${
-                    totalConcerts !== 0
-                        ? ((memberConcerts / totalConcerts) * 100).toFixed(2)
-                        : 0
-                }% </h3>
-                <h3>Total: ${
-                    totalRehearsals + totalConcerts !== 0
-                        ? (
-                              ((memberRehearsals + memberConcerts) /
-                                  (totalRehearsals + totalConcerts)) *
-                              100
-                          ).toFixed(2)
-                        : 0
-                }%</h3>
+                    <h2>Stats for ${memberName.first_name} ${memberName.last_name}</h2>
                 </div>`
             );
-            window.electronAPI
-                .getAttendedEvents("rehearsal", member_id)
-                .then((events) => {
-                    events.forEach((event) => {
-                        memberStatsContainer.insertAdjacentHTML(
-                            "beforeend",
-                            `<div class="event">
+            memberInfo  = document.querySelector(`#info-${member_id}`);
+            totalEvents = await window.electronAPI.getTotalEventCount(organization);
+            console.log(organization)
+            processMemberStats(eventTypes, member_id).then(() => {
+                memberInfo.insertAdjacentHTML(
+                    "beforeend",
+                    `<h2>Total attendance: ${totalAttendance} (${
+                        totalAttendance
+                            ? ((totalAttendance / totalEvents) * 100).toFixed(2)
+                            : 0
+                    }%)</h2>`
+                );
+            });
+
+            eventTypes
+                .forEach((type) => {
+                    window.electronAPI
+                        .getAttendedEvents(type, member_id)
+                        .then((events) => {
+                            events.forEach((event) => {
+                                memberStatsContainer.insertAdjacentHTML(
+                                    "beforeend",
+                                    `<div class="event">
                 Date: ${event.event_date}
                 Type: ${event.event_type}
             </div>`
-                        );
-                    });
-                });
-            window.electronAPI
-                .getAttendedEvents("concert", member_id)
-                .then((events) => {
-                    events.forEach((event) => {
-                        memberStatsContainer.insertAdjacentHTML(
-                            "beforeend",
-                            `<div class="event">
-                Date: ${event.event_date}
-                Type: ${event.event_type}
-            </div>`
-                        );
-                    });
-                });
+                                );
+                            });
+                        });
+                })
         }
         if (e.target.classList.contains("download-button")) {
             const members = await window.electronAPI.getAllMembers(
@@ -129,51 +103,16 @@
             );
             const stats = await Promise.all(
                 members.map(async (member) => {
-                    const rehearsals =
-                        await window.electronAPI.getMemberEventCount(
-                            member.member_id,
-                            "rehearsal"
-                        );
-                    const concerts =
-                        await window.electronAPI.getMemberEventCount(
-                            member.member_id,
-                            "concert"
-                        );
-                    const totalRehearsals =
-                        await window.electronAPI.getEventCount(
-                            "rehearsal",
-                            organization
-                        );
-                    const totalConcerts =
-                        await window.electronAPI.getEventCount(
-                            "concert",
-                            organization
-                        );
-                    const rehearsalPercentage = totalRehearsals
-                        ? (rehearsals / totalRehearsals) * 100
-                        : 0;
-                    const concertPercentage = totalConcerts
-                        ? (concerts / totalConcerts) * 100
-                        : 0;
-                    const totalPercentage =
-                        totalRehearsals + totalConcerts
-                            ? ((rehearsals + concerts) /
-                                  (totalRehearsals + totalConcerts)) *
-                              100
-                            : 0;
+                    
                     return {
-                        ...member,
-                        rehearsals,
-                        concerts,
-                        rehearsalPercentage,
-                        concertPercentage,
-                        totalPercentage
                     };
                 })
             );
             console.log(stats);
             const filePath = await window.electronAPI.showSaveDialog(
-                "member_stats_" + new Date().toLocaleDateString('de-DE') + ".pdf"
+                "member_stats_" +
+                    new Date().toLocaleDateString("de-DE") +
+                    ".pdf"
             );
             if (!filePath) return;
             console.log(filePath);
@@ -209,6 +148,34 @@
                 <button class='see-member-stats' id="${member.member_id}"> See stats </button>
                 <button class="delete-member-button" id="${member.member_id}"> Delete </button>
             </div>`
+                );
+            });
+        });
+    }
+
+    function processMemberStats(eventTypes, member_id_) {
+        const promises = eventTypes
+            .map((type) => {
+                return window.electronAPI.getMemberEventCount(member_id_, type).then((count) => {
+                return { type, count };
+            });
+            })
+        console.log(promises);
+        console.log(totalEvents);
+        return Promise.all(promises).then((results) => {
+            totalAttendance = results.reduce(
+                (acc, results) => acc + results.count,
+                0
+            );
+            results.forEach((result) => {
+                eventAttendance = result.count;
+                memberInfo.insertAdjacentHTML(
+                    "beforeend",
+                    `<h3>${result.type}: ${eventAttendance} (${
+                        eventAttendance
+                            ? ((eventAttendance / totalEvents) * 100).toFixed(2)
+                            : 0
+                    }%)</h3>`
                 );
             });
         });

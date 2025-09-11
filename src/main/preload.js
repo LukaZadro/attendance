@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     getAllAttendance: () => ipcRenderer.invoke('get-all-attendance'),
     getMemberEventCount: (member_id, event_type) => ipcRenderer.invoke('get-member-event-count', member_id, event_type),
     getEventCount: (event_type, organization) => ipcRenderer.invoke('get-event-count', event_type, organization),
+    getTotalEventCount: (organization) => ipcRenderer.invoke('get-total-event-count', organization),
     getAttendedEvents: (event_type, member_id) => ipcRenderer.invoke('get-attended-events', event_type, member_id),
     getEventAttendance: (event_id) => ipcRenderer.invoke('get-event-attendance', event_id),
     getEvent: (event_id) => ipcRenderer.invoke('get-event', event_id),
@@ -23,15 +24,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     addOrganization: (orgName) => ipcRenderer.invoke('add-organization', orgName),
     deleteOrganization: (orgName) => ipcRenderer.invoke('delete-organization', orgName),
     getAllOrganizations: () => ipcRenderer.invoke('get-all-organizations'),
-    store: {
-    get(key) {
-      return ipcRenderer.sendSync('electron-store-get', key);
-    },
-    set(property, val) {
-      ipcRenderer.send('electron-store-set', property, val);
-    },
-    delete(key) {
-      ipcRenderer.send('electron-store-delete', key);
-    }
-  }
+    getSetting: (key) => ipcRenderer.invoke('get-setting', key),
+    setSetting: (key, value) => ipcRenderer.invoke('set-setting', key, value),
+    addEventType: (organization, eventType) => ipcRenderer.invoke('add-event-type', organization, eventType),
+    getAllEventTypes: (organization) => ipcRenderer.invoke('get-event-types', organization),
+    removeEventType: (organization, eventType) => ipcRenderer.invoke('remove-event-type', organization, eventType)
 })

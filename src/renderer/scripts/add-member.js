@@ -2,7 +2,7 @@
     const form = document.querySelector(".add-member-form")
     form.addEventListener('submit', sendNewMember)
     const selectOrg = document.querySelector('#select-organization');
-    const organization = await window.electronAPI.getOrganization();
+    const organization = await window.electronAPI.getSetting('currentOrganization');
     
 
     const organizations = await window.electronAPI.getAllOrganizations();

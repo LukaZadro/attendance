@@ -2,16 +2,16 @@
     const recordAttendance = document.querySelector(".check-members");
     const form = document.querySelector("form");
     const selectOrg = document.querySelector("#select-organization");
-    let organization = await window.electronAPI.getOrganization();
-    
+    const selectEventType = document.querySelector("#event-type");
+    let organization = await window.electronAPI.getSetting(
+        "currentOrganization"
+    );
+    let eventType = await window.electronAPI.getSetting("defaultEventType");
     showMembers(organization);
-    const organizations = await window.electronAPI.getAllOrganizations();
-    organizations.forEach(organization => {
-        const option = document.createElement('option');
-        option.value = organization.organization_name;
-        option.textContent = organization.organization_name;
-        selectOrg.appendChild(option);
-    });
+    await showEventTypes(organization);
+    await showOrganizations();
+    selectEventType.value = eventType;
+
     selectOrg.value = organization;
     form.addEventListener("submit", submitAttendance);
     async function submitAttendance(e) {
@@ -31,7 +31,9 @@
             }))
             .filter((member) => member.attended);
         const event_date = document.querySelector('input[name="date"]').value;
-        const event_type = document.querySelector('select[name="type"]').value;
+        const event_type = document.querySelector(
+            'select[name="event-type"]'
+        ).value;
         const organization = document.querySelector(
             'select[name="select-organization"]'
         ).value;
@@ -52,6 +54,7 @@
         organization = e.target.value;
         clearMembers();
         showMembers(organization);
+        showEventTypes(organization);
     });
     function showMembers(organization) {
         window.electronAPI.getAllMembers(organization).then((members) => {
@@ -70,12 +73,33 @@
     function clearMembers() {
         const members = document.querySelectorAll(".member-check");
         members.forEach((el) => {
-           el.remove();
+            el.remove();
+        });
+    }
+    async function showEventTypes(organization) {
+        selectEventType.innerHTML = ""; // Clear existing options
+        const eventTypes = await window.electronAPI.getAllEventTypes(
+            organization
+        );
+        eventTypes.forEach((type) => {
+            const option = document.createElement("option");
+            option.value = type;
+            option.textContent = type;
+            selectEventType.appendChild(option);
+        });
+    }
+    async function showOrganizations() {
+        const organizations = await window.electronAPI.getAllOrganizations();
+        organizations.forEach((organization) => {
+            const option = document.createElement("option");
+            option.value = organization.organization_name;
+            option.textContent = organization.organization_name;
+            selectOrg.appendChild(option);
         });
     }
     function showMessage() {
         const message = document.querySelector(".message");
-        message.style.display = "block";   
+        message.style.display = "block";
         setTimeout(() => {
             message.style.display = "none";
         }, 3000);

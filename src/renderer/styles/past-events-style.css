@@ -38,7 +38,8 @@
 }
 
 .delete-event-button,
-.see-event-attendance { border: none;
+.see-event-attendance {
+    border: none;
     padding: 0.8rem 1.5rem;
     font-size: 1rem;
     border-radius: 8px;
@@ -79,11 +80,11 @@
     transform: translateY(-2px);
 }
 
-.cancel-event-delete {
+.confirm-event-delete {
     background-color: #6f3c3c; /* Different shade for cancel */
 }
 
-.cancel-event-delete:hover {
+.confirm-event-delete:hover {
     background-color: #492525;
 }
 

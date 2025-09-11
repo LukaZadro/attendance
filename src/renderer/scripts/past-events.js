@@ -3,7 +3,7 @@
     const confirmContainer = document.querySelector('.confirm-event-container');
     const eventAttendanceContainer = document.querySelector(".event-attendance-container");
     const selectOrg = document.querySelector('#select-organization');
-    let organization = await window.electronAPI.getOrganization();
+    let organization = await window.electronAPI.getSetting('currentOrganization');
     let event_id = null;
     let event = null;
     showEvents(organization);
