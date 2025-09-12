@@ -3,6 +3,7 @@
     const form = document.querySelector("form");
     const selectOrg = document.querySelector("#select-organization");
     const selectEventType = document.querySelector("#event-type");
+    const extraEventCheckbox = document.querySelector("#extra-event");
     let organization = await window.electronAPI.getSetting(
         "currentOrganization"
     );
@@ -37,11 +38,12 @@
         const organization = document.querySelector(
             'select[name="select-organization"]'
         ).value;
-        console.log(organization);
+        const extra_event = extraEventCheckbox.checked;
         const result = await window.electronAPI.addEvent(
             event_date,
             event_type,
-            organization
+            organization,
+            extra_event
         );
         await window.electronAPI.recordAttendance(
             result.event_id,

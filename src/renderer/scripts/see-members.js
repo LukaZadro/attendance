@@ -53,49 +53,7 @@
         }
         if (e.target.classList.contains("see-member-stats")) {
             member_id = e.target.id;
-            membersContainer.style.display = "none";
-            memberStatsContainer.style.display = "block";
-            
-            const memberName = await window.electronAPI.getMember(member_id);
-            const eventTypes = await window.electronAPI.getAllEventTypes(
-                organization
-            );
-            memberStatsContainer.insertAdjacentHTML(
-                "afterbegin",
-                `<div id='info-${member_id}'>
-                    <h2>Stats for ${memberName.first_name} ${memberName.last_name}</h2>
-                </div>`
-            );
-            memberInfo  = document.querySelector(`#info-${member_id}`);
-            totalEvents = await window.electronAPI.getTotalEventCount(organization);
-            console.log(organization)
-            processMemberStats(eventTypes, member_id).then(() => {
-                memberInfo.insertAdjacentHTML(
-                    "beforeend",
-                    `<h2>Total attendance: ${totalAttendance} (${
-                        totalAttendance
-                            ? ((totalAttendance / totalEvents) * 100).toFixed(2)
-                            : 0
-                    }%)</h2>`
-                );
-            });
-
-            eventTypes
-                .forEach((type) => {
-                    window.electronAPI
-                        .getAttendedEvents(type, member_id)
-                        .then((events) => {
-                            events.forEach((event) => {
-                                memberStatsContainer.insertAdjacentHTML(
-                                    "beforeend",
-                                    `<div class="event">
-                Date: ${event.event_date}
-                Type: ${event.event_type}
-            </div>`
-                                );
-                            });
-                        });
-                })
+            showMemberStats(member_id);
         }
         if (e.target.classList.contains("download-button")) {
             const members = await window.electronAPI.getAllMembers(
@@ -103,9 +61,7 @@
             );
             const stats = await Promise.all(
                 members.map(async (member) => {
-                    
-                    return {
-                    };
+                    return {};
                 })
             );
             console.log(stats);
@@ -153,31 +109,91 @@
         });
     }
 
-    function processMemberStats(eventTypes, member_id_) {
-        const promises = eventTypes
-            .map((type) => {
-                return window.electronAPI.getMemberEventCount(member_id_, type).then((count) => {
-                return { type, count };
-            });
-            })
-        console.log(promises);
-        console.log(totalEvents);
-        return Promise.all(promises).then((results) => {
-            totalAttendance = results.reduce(
-                (acc, results) => acc + results.count,
-                0
+    async function showMemberStats(member_id) {
+        membersContainer.style.display = "none";
+        memberStatsContainer.style.display = "block";
+        console.log(
+            await window.electronAPI.getExtraEventsForMember(member_id)
+        );
+        const memberName = await window.electronAPI.getMember(member_id);
+        const eventTypes = await window.electronAPI.getAllEventTypes(
+            organization
+        );
+        let totalRegularAttendance = 0;
+        let totalExtraAttendance = 0;
+        memberStatsContainer.insertAdjacentHTML(
+            "afterbegin",
+            `<div id='info-${member_id}'>
+                    <h2>Stats for ${memberName.first_name} ${memberName.last_name}</h2>
+                </div>`
+        );
+        memberInfo = document.querySelector(`#info-${member_id}`);
+        totalEvents = await window.electronAPI.getTotalEventCount(organization);
+        for (const type of eventTypes) {
+            let regularEventCount = await window.electronAPI.getRegularEventCount(
+                type,
+                organization
             );
-            results.forEach((result) => {
-                eventAttendance = result.count;
+
+            let regularAttendance =
+                await window.electronAPI.getMemberRegularEventCount(
+                    member_id,
+                    type
+                );
+            totalRegularAttendance += regularAttendance;
+            let extraAttendance = await window.electronAPI.getMemberExtraEventCount(
+                member_id,
+                type
+            );
+            totalExtraAttendance += extraAttendance;
+            if (
+                extraAttendance === 0
+            ) {
                 memberInfo.insertAdjacentHTML(
                     "beforeend",
-                    `<h3>${result.type}: ${eventAttendance} (${
-                        eventAttendance
-                            ? ((eventAttendance / totalEvents) * 100).toFixed(2)
+                    `<h3>${type}: ${regularAttendance} (${
+                        regularAttendance
+                            ? (
+                                  (regularAttendance / regularEventCount) *
+                                  100
+                              ).toFixed(2)
                             : 0
                     }%)</h3>`
                 );
-            });
+            } else {
+                memberInfo.insertAdjacentHTML(
+                    "beforeend",
+                    `<h3>${type}: ${regularAttendance} + ${extraAttendance} extra (${(
+                        ((regularAttendance + extraAttendance) / regularEventCount) *
+                        100
+                    ).toFixed(2)}%)</h3>`
+                );
+            }
+        }
+        
+        memberInfo.insertAdjacentHTML(
+            "beforeend",
+            `<h2>Total attendance: ${totalRegularAttendance} + ${totalExtraAttendance} (${
+                (totalRegularAttendance + totalExtraAttendance) && totalEvents
+                    ? (((totalRegularAttendance + totalExtraAttendance)/ totalEvents) * 100).toFixed(2)
+                    : 0
+            }%)</h2>`
+        );
+
+        eventTypes.forEach((type) => {
+            window.electronAPI
+                .getAttendedEvents(type, member_id)
+                .then((events) => {
+                    events.forEach((event) => {
+                        memberStatsContainer.insertAdjacentHTML(
+                            "beforeend",
+                            `<div class="event">
+                Date: ${event.event_date}
+                Type: ${event.event_type}
+            </div>`
+                        );
+                    });
+                });
         });
     }
     function clearMembers() {

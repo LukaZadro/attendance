@@ -66,9 +66,10 @@
     function showEvents(organization) {
         window.electronAPI.getAllEvents(organization).then((events) => {
         events.forEach((event) => {
+            const extraClass = event.extra_event ? 'extra-event' : '';
             eventsContainer.insertAdjacentHTML(
                 "beforeend",
-                `<div class="event">
+                `<div class="event ${extraClass}">
                 Date: ${event.event_date}
                 Type: ${event.event_type}
                 <button class='see-event-attendance' data-event-id="${event.event_id}"> Event attendance </button>

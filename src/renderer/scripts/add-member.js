@@ -19,12 +19,10 @@
         const fname = form.fname.value.toUpperCase().trim()
         const lname = form.lname.value.toUpperCase().trim()
         const organization =  document.querySelector('select[name="select-organization"]').value;
-        console.log(organization)
         const result = await window.electronAPI.addMember(fname, lname, organization); 
         if (result && !result.success) {
             console.log("Member exists!");
         } else {
-            console.log("Member added!");
             showMessage()
             form.reset()
         } 

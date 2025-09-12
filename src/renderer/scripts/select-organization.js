@@ -29,8 +29,9 @@
     }
     selectOrg.value = organization;
 
-    showEventTypes(organization);
+    
     let eventType = await window.electronAPI.getSetting("defaultEventType");
+    showEventTypes(organization);
     if (!eventType) {
         eventType = selectEventType.value; // fallback to the first option
         await window.electronAPI.setSetting("defaultEventType", eventType);

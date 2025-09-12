@@ -13,6 +13,7 @@ db.exec(`
         event_type TEXT NOT NULL,
         event_date DATE NOT NULL,
         organization TEXT NOT NULL,
+        extra_event BOOLEAN DEFAULT FALSE,
         FOREIGN KEY (organization) REFERENCES organization(organization_name) ON DELETE CASCADE);
     CREATE TABLE IF NOT EXISTS members (
         member_id INTEGER PRIMARY KEY,
@@ -73,11 +74,14 @@ ipcMain.handle("get-all-members", (_, organization) => {
     return stmnt.all(organization);
 });
 
-ipcMain.handle("get-all-events", (_, organization) => {
-    const stmnt = db.prepare("SELECT * FROM events WHERE organization = ?");
+ipcMain.handle("get-regular-events", (_, organization) => {
+    const stmnt = db.prepare("SELECT * FROM events WHERE organization = ? AND extra_event = FALSE");
     return stmnt.all(organization);
 });
-
+ipcMain.handle("get-extra-events", () => {
+    const stmnt = db.prepare("SELECT * FROM events WHERE extra_event = TRUE");
+    return stmnt.all();
+});
 ipcMain.handle("get-member", (_, member_id) => {
     const getMember = db.prepare(
         "SELECT first_name, last_name FROM members WHERE member_id = ?"
@@ -109,17 +113,27 @@ ipcMain.handle("delete-member", (_, member_id) => {
     deleteMemberRecords.run(member_id);
 });
 
-ipcMain.handle("add-event", (_, event_date, event_type, organization) => {
-    const insertEvent = db.prepare(
-        "INSERT INTO events (event_date, event_type, organization) VALUES(?,?,?)"
-    );
-    const result = insertEvent.run(event_date, event_type, organization);
-    return {
-        success: true,
-        message: "New event added!",
-        event_id: result.lastInsertRowid,
-    };
-});
+ipcMain.handle(
+    "add-event",
+    (_, event_date, event_type, organization, extra_event) => {
+        const insertEvent = db.prepare(`
+        INSERT INTO events (event_date, event_type, organization, extra_event) 
+        VALUES(?,?,?,?)
+    `);
+
+        const result = insertEvent.run(
+            event_date,
+            event_type,
+            organization,
+            extra_event ? 1 : 0 // Convert boolean to SQLite integer
+        );
+        return {
+            success: true,
+            message: "New event added!",
+            event_id: result.lastInsertRowid,
+        };
+    }
+);
 ipcMain.handle("remove-event", (_, event_id) => {
     const removeEvent = db.prepare("DELETE FROM events WHERE event_id = ?");
     removeEvent.run(event_id);
@@ -139,8 +153,12 @@ ipcMain.handle("get-all-attendance", () => {
     return getAllAttendance.all();
 });
 
-ipcMain.handle("get-member-event-count", (_, member_id, event_type) => {
+ipcMain.handle('get-all-events', (_, organization) => {
+    const getAllEvents = db.prepare("SELECT * FROM events WHERE organization = ?");
+    return getAllEvents.all(organization);
+});
 
+ipcMain.handle("get-member-regular-event-count", (_, member_id, event_type) => {
     const getMemberAttendance = db.prepare(
         `SELECT COUNT(*) AS count 
         FROM attendance JOIN events ON attendance.event_id = events.event_id
@@ -149,23 +167,34 @@ ipcMain.handle("get-member-event-count", (_, member_id, event_type) => {
     return getMemberAttendance.get(member_id, event_type).count;
 });
 
-ipcMain.handle("get-event-count", (_, event_type, organization) => {
+ipcMain.handle("get-member-extra-event-count", (_, member_id, event_type) => {
+    const getExtraMemberAttendance = db.prepare(
+        `SELECT COUNT(*) AS count 
+        FROM attendance JOIN events ON attendance.event_id = events.event_id
+        WHERE member_id = ? AND event_type = ? AND events.extra_event = TRUE`
+    );
+    return getExtraMemberAttendance.get(member_id, event_type).count;
+});
+
+ipcMain.handle("get-regular-event-count", (_, event_type, organization) => {
     const getEventCount = db.prepare(
         `SELECT COUNT(*) AS count 
         FROM events
-        WHERE event_type = ? AND organization = ?`
+        WHERE event_type = ? AND organization = ? AND extra_event = FALSE`
     );
     return getEventCount.get(event_type, organization).count;
 });
 
-ipcMain.handle('get-total-event-count', (_, organization) => {
+
+ipcMain.handle("get-total-event-count", (_, organization) => {
     const getTotalEventCount = db.prepare(
         `SELECT COUNT(*) AS count
         FROM events
-        WHERE organization = ?`
+        WHERE organization = ? AND extra_event = FALSE`
     );
     return getTotalEventCount.get(organization).count;
 });
+
 ipcMain.handle("get-attended-events", (_, event_type, member_id) => {
     const getAttendedEvents = db.prepare(`SELECT * FROM 
             members 
@@ -266,13 +295,15 @@ ipcMain.handle("get-all-organizations", () => {
     return getAllOrgs.all();
 });
 
-ipcMain.handle('get-setting', (_, key) => {
-    const getSetting = db.prepare("SELECT setting_value FROM settings WHERE setting_key = ?");
+ipcMain.handle("get-setting", (_, key) => {
+    const getSetting = db.prepare(
+        "SELECT setting_value FROM settings WHERE setting_key = ?"
+    );
     const row = getSetting.get(key);
     return row ? row.setting_value : null;
 });
 
-ipcMain.handle('set-setting', (_, key, value) => {
+ipcMain.handle("set-setting", (_, key, value) => {
     const insertSetting = db.prepare(`
         REPLACE INTO settings (setting_key, setting_value) 
         VALUES (?, ?)
@@ -280,7 +311,7 @@ ipcMain.handle('set-setting', (_, key, value) => {
     insertSetting.run(key, value);
 });
 
-ipcMain.handle('add-event-type', (_, organization_name, event_type) => {
+ipcMain.handle("add-event-type", (_, organization_name, event_type) => {
     const insertEventType = db.prepare(`
         INSERT OR IGNORE INTO organization_event_types (organization_name, event_type)
         VALUES (?, ?)
@@ -288,15 +319,26 @@ ipcMain.handle('add-event-type', (_, organization_name, event_type) => {
     insertEventType.run(organization_name, event_type);
 });
 
-ipcMain.handle('get-event-types', (_, organization_name) => {
+ipcMain.handle("get-event-types", (_, organization_name) => {
     const getEventTypes = db.prepare(`
         SELECT event_type FROM organization_event_types
         WHERE organization_name = ?
     `);
-    return getEventTypes.all(organization_name).map(row => row.event_type);
+    return getEventTypes.all(organization_name).map((row) => row.event_type);
 });
 
-ipcMain.handle('remove-event-type', (_, organization_name, event_type) => {
+ipcMain.handle("get-extra-events-for-member", (_, member_id) => {
+    const getExtraEvents = db.prepare(`
+        SELECT *
+        FROM events
+        JOIN attendance ON events.event_id = attendance.event_id
+        JOIN members ON attendance.member_id = members.member_id
+        WHERE events.extra_event = TRUE AND attendance.member_id = ?
+    `);
+    return getExtraEvents.all(member_id);
+});
+
+ipcMain.handle("remove-event-type", (_, organization_name, event_type) => {
     const removeEventType = db.prepare(`
         DELETE FROM organization_event_types
         WHERE organization_name = ? AND event_type = ?

@@ -33,6 +33,10 @@
     box-shadow: 0 1px 3px #3c5b6f;
     margin: 10px;
 }
+.event.extra-event {
+    border-left: 4px solid #27ae60; /* Distinctive green border */
+    background-color: rgba(35, 163, 88, 0.03); /* Very subtle green tint */
+}
 .event:hover {
     transform: translateX(4px);
 }
