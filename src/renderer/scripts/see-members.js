@@ -146,6 +146,7 @@
                 type
             );
             totalExtraAttendance += extraAttendance;
+            console.log(regularAttendance, extraAttendance, type);
             if (
                 extraAttendance === 0
             ) {
@@ -170,7 +171,8 @@
                 );
             }
         }
-        
+        console.log(totalRegularAttendance, totalExtraAttendance);
+        console.log(totalEvents);
         memberInfo.insertAdjacentHTML(
             "beforeend",
             `<h2>Total attendance: ${totalRegularAttendance} + ${totalExtraAttendance} (${

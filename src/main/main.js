@@ -162,7 +162,7 @@ ipcMain.handle("get-member-regular-event-count", (_, member_id, event_type) => {
     const getMemberAttendance = db.prepare(
         `SELECT COUNT(*) AS count 
         FROM attendance JOIN events ON attendance.event_id = events.event_id
-        WHERE member_id = ? AND event_type = ?`
+        WHERE member_id = ? AND event_type = ? AND events.extra_event = FALSE`
     );
     return getMemberAttendance.get(member_id, event_type).count;
 });
