@@ -22,6 +22,7 @@
     let totalEvents = null;
     showMembers(organization);
     const organizations = await window.electronAPI.getAllOrganizations();
+    const eventTypes = await window.electronAPI.getAllEventTypes(organization);
     organizations.forEach((organization) => {
         const option = document.createElement("option");
         option.value = organization.organization_name;
@@ -56,25 +57,74 @@
             showMemberStats(member_id);
         }
         if (e.target.classList.contains("download-button")) {
-            const members = await window.electronAPI.getAllMembers(
-                organization
-            );
-            const stats = await Promise.all(
-                members.map(async (member) => {
-                    return {};
-                })
-            );
-            console.log(stats);
             const filePath = await window.electronAPI.showSaveDialog(
                 "member_stats_" +
                     new Date().toLocaleDateString("de-DE") +
                     ".pdf"
             );
             if (!filePath) return;
-            console.log(filePath);
-            const result = await window.electronAPI.generatePDF(
+            const members = await window.electronAPI.getAllMembers(
+                organization
+            );
+
+            const memberStats = await Promise.all(
+                members.map(async (member) => {
+                    let memberData = {};
+                    memberData.first_name = member.first_name;
+                    memberData.last_name = member.last_name;
+                    let totalRegularAttendance = 0;
+                    let totalExtraAttendance = 0;
+                    let totalEvents =
+                        await window.electronAPI.getTotalEventCount(
+                            organization
+                        );
+                    for (const type of eventTypes) {
+                        let regularEventCount =
+                            await window.electronAPI.getRegularEventCount(
+                                type,
+                                organization
+                            );
+                        let regularAttendance =
+                            await window.electronAPI.getMemberRegularEventCount(
+                                member.member_id,
+                                type
+                            );
+                        totalRegularAttendance += regularAttendance;
+                        let extraAttendance =
+                            await window.electronAPI.getMemberExtraEventCount(
+                                member.member_id,
+                                type
+                            );
+                        totalExtraAttendance += extraAttendance;
+                        memberData[type] = regularAttendance + extraAttendance;
+                        memberData[type + " %"] = regularEventCount
+                            ? (
+                                  ((regularAttendance + extraAttendance) /
+                                      regularEventCount) *
+                                  100
+                              ).toFixed(2)
+                            : 0;
+                    }
+                    console.log(totalRegularAttendance, totalExtraAttendance);
+                    memberData["Total %"] = totalEvents
+                        ? (
+                              ((totalRegularAttendance + totalExtraAttendance) /
+                                  totalEvents) *
+                              100
+                          ).toFixed(2)
+                        : 0;
+                    console.log(
+                        totalExtraAttendance,
+                        totalRegularAttendance,
+                        totalEvents
+                    );
+                    return memberData;
+                })
+            );
+            const result = await window.electronAPI.generateStatsPDF(
                 filePath,
-                stats
+                memberStats,
+                eventTypes
             );
             if (result.success) {
                 alert(result.message);
@@ -116,9 +166,6 @@
             await window.electronAPI.getExtraEventsForMember(member_id)
         );
         const memberName = await window.electronAPI.getMember(member_id);
-        const eventTypes = await window.electronAPI.getAllEventTypes(
-            organization
-        );
         let totalRegularAttendance = 0;
         let totalExtraAttendance = 0;
         memberStatsContainer.insertAdjacentHTML(
@@ -130,10 +177,11 @@
         memberInfo = document.querySelector(`#info-${member_id}`);
         totalEvents = await window.electronAPI.getTotalEventCount(organization);
         for (const type of eventTypes) {
-            let regularEventCount = await window.electronAPI.getRegularEventCount(
-                type,
-                organization
-            );
+            let regularEventCount =
+                await window.electronAPI.getRegularEventCount(
+                    type,
+                    organization
+                );
 
             let regularAttendance =
                 await window.electronAPI.getMemberRegularEventCount(
@@ -141,15 +189,13 @@
                     type
                 );
             totalRegularAttendance += regularAttendance;
-            let extraAttendance = await window.electronAPI.getMemberExtraEventCount(
-                member_id,
-                type
-            );
+            let extraAttendance =
+                await window.electronAPI.getMemberExtraEventCount(
+                    member_id,
+                    type
+                );
             totalExtraAttendance += extraAttendance;
-            console.log(regularAttendance, extraAttendance, type);
-            if (
-                extraAttendance === 0
-            ) {
+            if (extraAttendance === 0) {
                 memberInfo.insertAdjacentHTML(
                     "beforeend",
                     `<h3>${type}: ${regularAttendance} (${
@@ -165,7 +211,8 @@
                 memberInfo.insertAdjacentHTML(
                     "beforeend",
                     `<h3>${type}: ${regularAttendance} + ${extraAttendance} extra (${(
-                        ((regularAttendance + extraAttendance) / regularEventCount) *
+                        ((regularAttendance + extraAttendance) /
+                            regularEventCount) *
                         100
                     ).toFixed(2)}%)</h3>`
                 );
@@ -173,14 +220,33 @@
         }
         console.log(totalRegularAttendance, totalExtraAttendance);
         console.log(totalEvents);
-        memberInfo.insertAdjacentHTML(
-            "beforeend",
-            `<h2>Total attendance: ${totalRegularAttendance} + ${totalExtraAttendance} (${
-                (totalRegularAttendance + totalExtraAttendance) && totalEvents
-                    ? (((totalRegularAttendance + totalExtraAttendance)/ totalEvents) * 100).toFixed(2)
-                    : 0
-            }%)</h2>`
-        );
+        if (totalExtraAttendance > 0) {
+            memberInfo.insertAdjacentHTML(
+                "beforeend",
+                `<h2>Total attendance: ${totalRegularAttendance} + ${totalExtraAttendance} extra (${
+                    totalRegularAttendance + totalExtraAttendance && totalEvents
+                        ? (
+                              ((totalRegularAttendance + totalExtraAttendance) /
+                                  totalEvents) *
+                              100
+                          ).toFixed(2)
+                        : 0
+                }%)</h2>`
+            );
+        } else {
+            memberInfo.insertAdjacentHTML(
+                "beforeend",
+                `<h2>Total attendance: ${totalRegularAttendance} (${
+                    totalRegularAttendance && totalEvents
+                        ? (
+                              ((totalRegularAttendance) /
+                                  totalEvents) *
+                              100
+                          ).toFixed(2)
+                        : 0
+                }%)</h2>`
+            );
+        }
 
         eventTypes.forEach((type) => {
             window.electronAPI

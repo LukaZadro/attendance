@@ -22,8 +22,11 @@
     <h2>Default event type:</h2>
     <div class="event-type-select-container">
         <select name="event-type" id="event-type"></select>
+        <button class="remove-event-type">Remove event type</button>
     </div>
-
+    <div class="no-events-message">
+        <h2>The event type is not selected</h2>
+    </div>
     <button class="delete-organization-button">Delete organization</button>
 </div>
 <div class="delete-organization-confirm">
@@ -35,4 +38,9 @@
     <h2>Are you sure, once you delete it you can't go back</h2>
     <button class="delete-anyway-button">Delete anyway</button>
     <button class="cancel-organization-delete">Cancel</button>
+</div>
+<div class="remove-event-type-container">
+    <h2></h2>
+    <button class="confirm-event-type-remove">remove</button>
+    <button class="cancel-event-type-remove">cancel</button>
 </div>

@@ -1,7 +1,7 @@
 (async () => {
     const form = document.querySelector(".add-member-form")
     form.addEventListener('submit', sendNewMember)
-    const selectOrg = document.querySelector('#select-organization');
+    let selectOrg = document.querySelector('#select-organization');
     const organization = await window.electronAPI.getSetting('currentOrganization');
     
 

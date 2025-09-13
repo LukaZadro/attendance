@@ -23,7 +23,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     setOrganization: (organization) => ipcRenderer.invoke('set-organization', organization),
     getOrganization: () => ipcRenderer.invoke('get-organization'),
     showSaveDialog: (defaultFileName) => ipcRenderer.invoke('show-save-dialog', defaultFileName),
-    generatePDF: (filePath, content) => ipcRenderer.invoke('generate-pdf', filePath, content),
+    generateStatsPDF: (filePath, members, eventTypes) => ipcRenderer.invoke('generate-stats-pdf', filePath, members, eventTypes),
     addOrganization: (orgName) => ipcRenderer.invoke('add-organization', orgName),
     deleteOrganization: (orgName) => ipcRenderer.invoke('delete-organization', orgName),
     getAllOrganizations: () => ipcRenderer.invoke('get-all-organizations'),

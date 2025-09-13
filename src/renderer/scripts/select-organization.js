@@ -13,8 +13,8 @@
         ".delete-organization-confirm"
     );
     const finalDeleteConfirm = document.querySelector(".final-delete-confirm");
-    const organizations = await window.electronAPI.getAllOrganizations();
-    
+    let organizations = await window.electronAPI.getAllOrganizations();
+
     // Get the current organization from main process
     let organization = await window.electronAPI.getSetting(
         "currentOrganization"
@@ -29,7 +29,6 @@
     }
     selectOrg.value = organization;
 
-    
     let eventType = await window.electronAPI.getSetting("defaultEventType");
     showEventTypes(organization);
     if (!eventType) {
@@ -39,7 +38,7 @@
     selectEventType.value = eventType;
 
     selectOrg.addEventListener("change", async (e) => {
-        const organization = e.target.value;
+        organization = e.target.value;
         await window.electronAPI.setSetting(
             "currentOrganization",
             organization
@@ -65,10 +64,10 @@
     });
     addEventTypeForm.addEventListener("submit", async (e) => {
         e.preventDefault();
-        const eventType = addEventTypeForm.eventType.value.trim();
+        eventType = addEventTypeForm.eventType.value.trim();
         await window.electronAPI.addEventType(selectOrg.value, eventType);
         addEventTypeForm.reset();
-        showOrganizations();
+        showEventTypes(organization);
         showMessage(eventTypeAddedMessage);
     });
     async function showEventTypes(organization) {
@@ -112,26 +111,95 @@
             document.querySelector(
                 ".select-organization-container"
             ).style.display = "block";
-            selectOrg.innerHTML = "";
+            selectOrg.querySelectorAll("option").forEach((el) => {
+                if ((el.value = selectOrg.value)) el.remove();
+            });
             clearEventTypes();
-            showOrganizations();
-            organization = selectOrg.value;
-            await window.electronAPI.setSetting(
-                "currentOrganization",
-                organization
+            selectOrg.innerHTML = "";
+            await showOrganizations();
+            if (selectOrg.options.length > 0) {
+                organization = selectOrg.options[0].value;
+                await window.electronAPI.setSetting(
+                    "currentOrganization",
+                    organization
+                );
+                await showEventTypes(organization);
+                selectOrg.value = organization;
+                eventType = selectEventType.value;
+                await window.electronAPI.setSetting(
+                    "defaultEventType",
+                    eventType
+                );
+                selectEventType.value = eventType;
+            } else {
+                selectEventType.innerHTML = "";
+                selectOrg.innerHTML = "";
+                organization = null;
+                eventType = null;
+                await window.electronAPI.setSetting(
+                    "currentOrganization",
+                    organization
+                );
+                await window.electronAPI.setSetting("defaultEventType", eventType);
+            }
+        }
+        if (e.target.classList.contains("remove-event-type")) {
+            const confirmEventTypeRemove = document.querySelector(
+                ".remove-event-type-container"
             );
+            eventType = selectEventType.value;
+            if (
+                eventType === null ||
+                eventType === undefined ||
+                eventType === ""
+            ) {
+                document.querySelector(".no-events-message").style.display =
+                    "block";
+                setTimeout(() => {
+                    document.querySelector(".no-events-message").style.display =
+                        "none";
+                }, 3000);
+                return;
+            } else {
+                confirmEventTypeRemove.style.display = "block";
+                confirmEventTypeRemove.querySelector(
+                    "h2"
+                ).innerText = `Are you sure you want to permanently delete event type ${eventType.toUpperCase()}? This will NOT delete past events of this type but you wont be able to add new events of the same type.`;
+                document.querySelector(
+                    ".select-organization-container"
+                ).style.display = "none";
+            }
+        }
+        if (e.target.classList.contains("confirm-event-type-remove")) {
+            await window.electronAPI.removeEventType(organization, eventType);
+            document.querySelector(
+                ".remove-event-type-container"
+            ).style.display = "none";
+            document.querySelector(
+                ".select-organization-container"
+            ).style.display = "block";
+            selectEventType.innerHTML = "";
+            clearEventTypes();
             showEventTypes(organization);
-            selectOrg.value = organization;
             eventType = selectEventType.value;
             await window.electronAPI.setSetting("defaultEventType", eventType);
             selectEventType.value = eventType;
+        }
+        if (e.target.classList.contains("cancel-event-type-remove")) {
+            document.querySelector(
+                ".remove-event-type-container"
+            ).style.display = "none";
+            document.querySelector(
+                ".select-organization-container"
+            ).style.display = "block";
         }
     });
     function clearEventTypes() {
         const options = document.querySelectorAll("#event-type option");
         options.forEach((el) => el.remove());
     }
-    function showOrganizations() {
+    async function showOrganizations() {
+        organizations = await window.electronAPI.getAllOrganizations();
         organizations.forEach((organization) => {
             const option = document.createElement("option");
             option.value = organization.organization_name;

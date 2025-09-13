@@ -1,6 +1,7 @@
 .select-organization-container,
 .delete-organization-confirm,
-.final-delete-confirm {
+.final-delete-confirm,
+.remove-event-type-container {
     margin: 2rem auto;
     padding: 2rem;
     border-radius: 12px;
@@ -8,7 +9,9 @@
 }
 
 .delete-organization-confirm,
-.final-delete-confirm {
+.final-delete-confirm,
+.remove-event-type-container,
+.no-events-message {
     display: none;
 }
 .select-organization-container select {
@@ -27,7 +30,8 @@
 
 .add-organization-button,
 .delete-organization-button,
-.add-event-type-button {
+.add-event-type-button,
+.remove-event-type {
     width: 40%;
     background-color: #3c5b6f;
     color: white;
@@ -42,13 +46,17 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
-.delete-organization-button {
+.delete-organization-button,
+.remove-event-type {
     background-color: #6f3c3c; 
 }
-
 .add-organization-button:hover,
 .add-event-type-button:hover {  
     background-color: #253b49;
+}
+
+.delete-organization-button {
+    margin-top: 6rem; /* Different shade for cancel */
 }
 
 .select-organization-container input[type="text"] {
@@ -61,7 +69,8 @@
 }
 
 .organization-added-message,
-.event-type-added-message {
+.event-type-added-message,
+.no-events-message {
     display: none;
     margin-top: 1.5rem;
     padding: 1rem;
@@ -97,12 +106,16 @@
 }
 
 .confirm-organization-delete,
-.delete-anyway-button {
+.delete-anyway-button,
+.no-events-message {
     background-color: #6f3c3c; /* Different shade for cancel */
 }
-
+.no-events-message{
+    color: white;
+}
 .confirm-organization-delete:hover,
 .delete-organization-button:hover,
-.delete-anyway-button:hover {
+.delete-anyway-button:hover,
+.remove-event-type:hover {
     background-color: #492525;
 }

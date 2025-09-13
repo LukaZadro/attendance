@@ -229,31 +229,37 @@ ipcMain.handle("show-save-dialog", async (_, defaultFileName) => {
     return result.filePath;
 });
 
-ipcMain.handle("generate-pdf", async (_, filePath, content) => {
+ipcMain.handle("generate-stats-pdf", async (_, filePath, members, eventTypes) => {
     return new Promise((resolve, reject) => {
         const doc = new PDFDocument();
         const stream = fs.createWriteStream(filePath); // write to PDF
         doc.pipe(stream);
 
+        let headers = [
+            "First Name",
+            "Last Name",]
+        eventTypes.forEach((type) => {
+            headers.push(type);
+        });
+        eventTypes.forEach((type) => {
+            headers.push(type + " %");
+        });
+        headers.push("Total %");
+        let rows = [];
+        members.forEach((member) => {
+            let row = [member.first_name, member.last_name];
+            eventTypes.forEach((type) => {
+                row.push(member[type] || 0);
+            });
+            eventTypes.forEach((type) => {
+                row.push(member[type + " %"] ? member[type + " %"] : "0.00");
+            });
+            row.push(member['Total %'] ? member['Total %'] : "0.00");
+            rows.push(row);
+        });
         const table = {
-            headers: [
-                "First Name",
-                "Last Name",
-                "Rehearsals",
-                "Concerts",
-                "Reh. %",
-                "Conc. %",
-                "Total %",
-            ],
-            rows: content.map((member) => [
-                member.first_name,
-                member.last_name,
-                member.rehearsals,
-                member.concerts,
-                member.rehearsalPercentage.toFixed(2),
-                member.concertPercentage.toFixed(2),
-                member.totalPercentage.toFixed(2),
-            ]),
+            headers: headers,
+            rows: rows
         };
 
         doc.table(table);
