@@ -20,7 +20,8 @@
     "chart.js": "^4.5.0",
     "electron-squirrel-startup": "^1.0.1",
     "pdfkit": "^0.17.2",
-    "pdfkit-table": "^0.1.99"
+    "pdfkit-table": "^0.1.99",
+    "update-electron-app": "^3.1.1"
   },
   "devDependencies": {
     "@electron-forge/cli": "^7.8.3",
