@@ -83,7 +83,9 @@
 
 .confirm-organization-delete,
 .cancel-organization-delete,
-.delete-anyway-button {
+.delete-anyway-button,
+.confirm-event-type-remove,
+.cancel-event-type-remove {
     border: none;
     padding: 0.8rem 1.5rem;
     font-size: 1rem;
@@ -100,14 +102,18 @@
 
 .confirm-organization-delete:hover,
 .cancel-organization-delete:hover,
-.delete-anyway-button:hover {
+.delete-anyway-button:hover,
+.confirm-event-type-remove:hover,
+.cancel-event-type-remove:hover {
     background-color: #253b49;
     transform: translateY(-2px);
 }
 
 .confirm-organization-delete,
 .delete-anyway-button,
-.no-events-message {
+.no-events-message,
+.confirm-event-type-remove
+ {
     background-color: #6f3c3c; /* Different shade for cancel */
 }
 .no-events-message{
@@ -116,6 +122,7 @@
 .confirm-organization-delete:hover,
 .delete-organization-button:hover,
 .delete-anyway-button:hover,
-.remove-event-type:hover {
+.remove-event-type:hover,
+.confirm-event-type-remove:hover {
     background-color: #492525;
 }

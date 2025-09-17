@@ -112,11 +112,11 @@
                 ".select-organization-container"
             ).style.display = "block";
             selectOrg.querySelectorAll("option").forEach((el) => {
-                if ((el.value = selectOrg.value)) el.remove();
+                if ((el.value === selectOrg.value)) el.remove();
             });
             clearEventTypes();
-            selectOrg.innerHTML = "";
-            await showOrganizations();
+            // selectOrg.innerHTML = "";
+            // await showOrganizations();
             if (selectOrg.options.length > 0) {
                 organization = selectOrg.options[0].value;
                 await window.electronAPI.setSetting(
