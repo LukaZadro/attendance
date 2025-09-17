@@ -1,3 +1,4 @@
+require('update-electron-app')();
 const { app, BrowserWindow, ipcMain, dialog } = require("electron");
 const path = require("path");
 const Database = require("better-sqlite3");
