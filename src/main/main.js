@@ -9,6 +9,7 @@ const PDFDocument = require("pdfkit-table");
 const userDataPath = app.getPath('userData');
 const dataDir = path.join(userDataPath, 'data');
 const dbPath = path.join(dataDir, 'attendance.db');
+const db = new Database(dbPath);
 db.exec(`
     CREATE TABLE IF NOT EXISTS events (
         event_id INTEGER PRIMARY KEY,
