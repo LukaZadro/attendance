@@ -7,10 +7,15 @@ const fs = require("fs");
 const PDFDocument = require("pdfkit-table");
 
 // Initialize the database
-const userDataPath = app.getPath('userData');
-const dataDir = path.join(userDataPath, 'data');
-const dbPath = path.join(dataDir, 'attendance.db');
-const db = new Database(dbPath);
+const userDataPath = app.getPath('userData'); 
+const dataDir = path.join(userDataPath, 'data'); 
+const dbPath = path.join(dataDir, 'attendance.db'); 
+
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true }); // CREATES THE MISSING DIRECTORY
+}
+
+const db = new Database(dbPath); 
 db.exec(`
     CREATE TABLE IF NOT EXISTS events (
         event_id INTEGER PRIMARY KEY,
