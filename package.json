@@ -4,6 +4,10 @@
   "version": "1.0.0",
   "description": "My Electron application description",
   "main": "src/main/main.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LukaZadro/attendance.git"
+  },
   "scripts": {
     "start": "electron-forge start",
     "dev": "electronmon src/main/main.js",
